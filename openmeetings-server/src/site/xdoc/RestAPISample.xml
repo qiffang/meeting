@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ -->
+<document xmlns="http://maven.apache.org/XDOC/2.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 http://maven.apache.org/xsd/xdoc-2.0.xsd">
+	<properties>
+		<title>REST API sample</title>
+		<author email="dev@openmeetings.apache.org">Apache OpenMeetings Team</author>
+	</properties>
+	<body>
+		<section name="Introduction">
+			<p> For a detailed instruction which services, methods and params are available see the list in the <a href="/openmeetings-webservice/apidocs/index.html" target="_blank">SOAP/REST API</a> .
+				ALL methods that are implemented for the SOAP API are also available via REST. 
+			</p>
+			<div>
+				you can query methods of each service using following suffixes
+				
+				<ul>
+					<li>SOAP: <tt>?wsdl</tt> suffix, for example <tt>http://localhost:5080/openmeetings/services/UserService?wsdl</tt></li>
+					<li>REST: as xml <tt>?_wadl</tt> for example <tt>http://localhost:5080/openmeetings/services/user?_wadl</tt></li>
+					<li>REST: as json <tt>?_wadl&amp;type=json</tt> for example <tt>http://localhost:5080/openmeetings/services/user?_wadl&amp;type=json</tt></li>
+				</ul>
+			</div> 
+		</section>
+		<section name="How to get room hash via REST">
+			<ul>
+				<li>
+					First of all you need to perform login and get authorized SID to perform authorized operations
+					<table>
+						<tr>
+							<td>Request</td>
+							<td>Error response</td>
+							<td>Successful response</td>
+						</tr>
+						<tr>
+							<td>
+<source>
+$.ajax({
+  method: "GET",
+  url: "services/user/login",
+  data: {user: 'admin', pass: '12345'},
+  dataType: "json"
+});
+</source>
+							</td>
+							<td>
+<source>
+{
+  "serviceResult": {
+    "code": -11,
+    "type": "ERROR"
+  }
+}
+</source>
+							</td>
+							<td>
+<source>
+{
+  "serviceResult": {
+    "code": 1,
+    "message": "78189aff-d68d-458a-8840-5b18d15a50b0",
+    "type": "SUCCESS"
+  }
+}
+</source>
+							</td>
+						</tr>
+					</table>
+				</li>
+				<li>
+					In case of error you can get detailed error message in your language as result of following query 
+					<tt>http://localhost:5080/openmeetings/services/error/<b>ERROR_ID</b>/<b>LANGUAGE_ID</b></tt>
+					(for ex. http://localhost:5080/openmeetings/services/error/<b>-11</b>/<b>9</b>)
+				</li>
+				<li>If your request was successful you will get your SID as <b>message</b> (78189aff-d68d-458a-8840-5b18d15a50b0)</li>
+				<li>Then you can use SID to generate room hash
+					<table>
+						<tr>
+							<td>Request</td>
+							<td>Successful response</td>
+						</tr>
+						<tr>
+							<td>
+<source>
+$.ajax({
+  method: "POST",
+  url: "services/user/hash?sid=78189aff-d68d-458a-8840-5b18d15a50b0",
+  data: {user: JSON.stringify({
+      firstname: 'John',
+      lastname: 'Doe',
+      externalId: 'uid1',
+      externalType: 'myCMS',
+      login: 'superjohn'
+      }),
+    options: JSON.stringify({
+      roomId: 5,
+      moderator: true,
+      showAudioVideoTest: true
+      })
+    },
+  dataType: "json"
+})
+</source>
+							</td>
+							<td>
+<source>
+{
+  "serviceResult": {
+    "code": 0,
+    "message": "fa1f9381-bd03-42ae-9fd9-332b5f775a1b",
+    "type": "SUCCESS"
+  }
+}
+</source>
+							</td>
+						</tr>
+					</table>
+				</li>
+				<li>If your request was successful you will get your hash as <b>message</b> (fa1f9381-bd03-42ae-9fd9-332b5f775a1b)</li>
+				<li>Now you can use following URL to enter the room: <tt>http://localhost:5080/openmeetings/swf?secureHash=fa1f9381-bd03-42ae-9fd9-332b5f775a1b&amp;language=1</tt></li>
+			</ul>
+		</section>
+	</body>
+</document>
